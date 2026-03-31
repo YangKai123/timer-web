@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>循环计时器</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --primary: #ec4899;
+      --primary-hover: #db2777;
+      --border: #e5e7eb;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 680px;
+      margin: 32px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 24px;
+    }
+
+    .sub {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    .label {
+      font-weight: 600;
+      min-width: 130px;
+    }
+
+    .count {
+      width: 72px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+    }
+
+    input[type="number"] {
+      width: 120px;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0 10px;
+      font-size: 14px;
+      outline: none;
+      background: #fff;
+    }
+
+    .btn {
+      height: 36px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.15s ease;
+    }
+
+    .btn-start {
+      color: #fff;
+      background: var(--primary);
+    }
+    .btn-start:hover { background: var(--primary-hover); }
+
+    .btn-ghost {
+      color: var(--text);
+      background: #f3f4f6;
+    }
+
+    .global {
+      margin-top: 14px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>循环计时器</h1>
+      <p class="sub">45 / 60 / 90 秒 + 自定义秒数。每行右侧可独立开始。</p>
+
+      <div class="list">
+        <div class="row" data-seconds="45">
+          <div class="label">45 秒循环</div>
+          <div class="count">45</div>
+          <button class="btn btn-start">开始</button>
+          <button class="btn btn-ghost btn-stop">停止</button>
+        </div>
+
+        <div class="row" data-seconds="60">
+          <div class="label">60 秒循环</div>
+          <div class="count">60</div>
+          <button class="btn btn-start">开始</button>
+          <button class="btn btn-ghost btn-stop">停止</button>
+        </div>
+
+        <div class="row" data-seconds="90">
+          <div class="label">90 秒循环</div>
+          <div class="count">90</div>
+          <button class="btn btn-start">开始</button>
+          <button class="btn btn-ghost btn-stop">停止</button>
+        </div>
+
+        <div class="row" id="customRow">
+          <div class="label">自定义秒数</div>
+          <input id="customInput" type="number" min="1" step="1" value="30" />
+          <button id="customStart" class="btn btn-start">开始</button>
+          <button id="customStop" class="btn btn-ghost btn-stop">停止</button>
+        </div>
+      </div>
+
+      <div class="global">
+        <button id="pauseAll" class="btn btn-ghost">全部暂停</button>
+        <button id="resumeAll" class="btn btn-ghost">全部继续</button>
+        <button id="resetAll" class="btn btn-ghost">全部重置</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const timers = new Map();
+
+    function createLoopTimer(row, seconds) {
+      const countEl = row.querySelector(".count");
+      const startBtn = row.querySelector(".btn-start");
+      const stopBtn = row.querySelector(".btn-stop");
+      const key = row.id || row.dataset.seconds;
+
+      if (!timers.has(key)) {
+        timers.set(key, {
+          initial: seconds,
+          remaining: seconds,
+          running: false,
+          paused: false,
+          intervalId: null
+        });
+      } else {
+        const t = timers.get(key);
+        t.initial = seconds;
+        if (!t.running) t.remaining = seconds;
+      }
+
+      const state = timers.get(key);
+      countEl.textContent = String(state.remaining);
+
+      function tick() {
+        state.remaining -= 1;
+        if (state.remaining <= 0) {
+          state.remaining = state.initial;
+          // 每次循环结束可在这里加声音/震动
+        }
+        countEl.textContent = String(state.remaining);
+      }
+
+      function start() {
+        if (state.running) return;
+        state.running = true;
+        state.paused = false;
+        if (state.remaining <= 0) state.remaining = state.initial;
+        countEl.textContent = String(state.remaining);
+        state.intervalId = setInterval(tick, 1000);
+        startBtn.textContent = "运行中";
+      }
+
+      function stop() {
+        state.running = false;
+        state.paused = false;
+        clearInterval(state.intervalId);
+        state.intervalId = null;
+        state.remaining = state.initial;
+        countEl.textContent = String(state.remaining);
+        startBtn.textContent = "开始";
+      }
+
+      startBtn.onclick = start;
+      stopBtn.onclick = stop;
+    }
+
+    document.querySelectorAll(".row[data-seconds]").forEach((row) => {
+      const seconds = Number(row.dataset.seconds);
+      createLoopTimer(row, seconds);
+    });
+
+    const customRow = document.getElementById("customRow");
+    const customInput = document.getElementById("customInput");
+    const customStart = document.getElementById("customStart");
+    const customStop = document.getElementById("customStop");
+
+    customStart.onclick = () => {
+      const seconds = Number(customInput.value);
+      if (!Number.isInteger(seconds) || seconds <= 0) {
+        alert("请输入大于 0 的整数秒数");
+        return;
+      }
+      customRow.querySelector(".label").textContent = `自定义 ${seconds} 秒循环`;
+      if (!customRow.querySelector(".count")) {
+        const count = document.createElement("div");
+        count.className = "count";
+        customRow.insertBefore(count, customStart);
+      } else {
+        customRow.querySelector(".count").textContent = String(seconds);
+      }
+
+      if (!customRow.querySelector(".count")) return;
+
+      // 确保 custom 行结构固定为：label + count + start + stop
+      const oldInput = customRow.querySelector("input");
+      if (oldInput) oldInput.remove();
+      const countEl = customRow.querySelector(".count");
+      customRow.insertBefore(countEl, customStart);
+
+      createLoopTimer(customRow, seconds);
+      customRow.querySelector(".btn-start").click();
+    };
+
+    customStop.onclick = () => {
+      const key = customRow.id;
+      const state = timers.get(key);
+      if (!state) return;
+      state.running = false;
+      state.paused = false;
+      clearInterval(state.intervalId);
+      state.intervalId = null;
+      state.remaining = state.initial;
+      const startBtn = customRow.querySelector(".btn-start");
+      const countEl = customRow.querySelector(".count");
+      if (startBtn) startBtn.textContent = "开始";
+      if (countEl) countEl.textContent = String(state.remaining);
+    };
+
+    document.getElementById("pauseAll").onclick = () => {
+      timers.forEach((state, key) => {
+        if (!state.running) return;
+        state.running = false;
+        state.paused = true;
+        clearInterval(state.intervalId);
+        state.intervalId = null;
+        const row = document.querySelector(key === "customRow" ? "#customRow" : `.row[data-seconds="${key}"]`);
+        const startBtn = row?.querySelector(".btn-start");
+        if (startBtn) startBtn.textContent = "继续";
+      });
+    };
+
+    document.getElementById("resumeAll").onclick = () => {
+      timers.forEach((state, key) => {
+        if (!state.paused || state.running) return;
+        const row = document.querySelector(key === "customRow" ? "#customRow" : `.row[data-seconds="${key}"]`);
+        const countEl = row?.querySelector(".count");
+        const startBtn = row?.querySelector(".btn-start");
+        state.running = true;
+        state.paused = false;
+        state.intervalId = setInterval(() => {
+          state.remaining -= 1;
+          if (state.remaining <= 0) state.remaining = state.initial;
+          if (countEl) countEl.textContent = String(state.remaining);
+        }, 1000);
+        if (startBtn) startBtn.textContent = "运行中";
+      });
+    };
+
+    document.getElementById("resetAll").onclick = () => {
+      timers.forEach((state, key) => {
+        state.running = false;
+        state.paused = false;
+        clearInterval(state.intervalId);
+        state.intervalId = null;
+        state.remaining = state.initial;
+        const row = document.querySelector(key === "customRow" ? "#customRow" : `.row[data-seconds="${key}"]`);
+        const countEl = row?.querySelector(".count");
+        const startBtn = row?.querySelector(".btn-start");
+        if (countEl) countEl.textContent = String(state.remaining);
+        if (startBtn) startBtn.textContent = "开始";
+      });
+    };
+  </script>
+</body>
+</html>

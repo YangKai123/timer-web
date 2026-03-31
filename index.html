@@ -55,28 +55,40 @@
 
     .row {
       display: grid;
-      grid-template-columns: 1fr auto auto auto;
-      gap: 8px;
+      grid-template-columns: auto 56px auto auto;
+      column-gap: 4px;
+      row-gap: 6px;
       align-items: center;
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 10px;
+      padding: 10px 8px;
     }
 
     .label {
       font-weight: 600;
-      min-width: 130px;
+      min-width: 0;
+      white-space: nowrap;
+      margin-right: 0;
     }
 
     .count {
-      width: 72px;
+      width: 56px;
       text-align: center;
       font-variant-numeric: tabular-nums;
-      font-weight: 600;
+      font-weight: 800;
+      font-size: 28px;
+      line-height: 1;
+      letter-spacing: 0.5px;
+      color: #8b5cf6;
+    }
+    .row.row-45 .count { color: #8b5cf6; }   /* 紫 */
+    .row.row-60 .count { color: #0ea5e9; }   /* 蓝 */
+    .row.row-90 .count { color: #f97316; }   /* 橙 */
+    .row.row-custom .count { color: #16a34a; } /* 绿 */
     }
 
     input[type="number"] {
-      width: 120px;
+      width: 104px;
       height: 36px;
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -122,28 +134,28 @@
       <p class="sub">45 / 60 / 90 秒 + 自定义秒数。每行右侧可独立开始。</p>
 
       <div class="list">
-        <div class="row" data-seconds="45">
+        <div class="row row-45" data-seconds="45">
           <div class="label">45 秒循环</div>
           <div class="count">45</div>
           <button class="btn btn-start">开始</button>
           <button class="btn btn-ghost btn-stop">停止</button>
         </div>
 
-        <div class="row" data-seconds="60">
+        <div class="row row-60" data-seconds="60">
           <div class="label">60 秒循环</div>
           <div class="count">60</div>
           <button class="btn btn-start">开始</button>
           <button class="btn btn-ghost btn-stop">停止</button>
         </div>
 
-        <div class="row" data-seconds="90">
+        <div class="row row-90" data-seconds="90">
           <div class="label">90 秒循环</div>
           <div class="count">90</div>
           <button class="btn btn-start">开始</button>
           <button class="btn btn-ghost btn-stop">停止</button>
         </div>
 
-        <div class="row" id="customRow">
+        <div class="row row-custom" id="customRow">
           <div class="label">自定义秒数</div>
           <input id="customInput" type="number" min="1" step="1" value="30" />
           <button id="customStart" class="btn btn-start">开始</button>
